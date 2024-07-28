@@ -11,7 +11,7 @@ contract ImprovedToken {
     event Transfer(address indexed from, address indexed to, uint256 amount);
 
     // Function to deposit Ether into the contract
-    function deposit() public payable {
+    function deposit() external payable {
         require(msg.value > 0, "Deposit amount must be greater than zero");
 
         // Increase the balance of the sender
@@ -22,38 +22,39 @@ contract ImprovedToken {
     }
 
     // Function to withdraw Ether from the contract
-    function withdraw(uint256 _amount) public {
-        require(_amount > 0, "Withdrawal amount must be greater than zero");
-        require(balances[msg.sender] >= _amount, "Insufficient balance");
+    function withdraw(uint256 amount) external {
+        require(amount > 0, "Withdrawal amount must be greater than zero");
+        require(balances[msg.sender] >= amount, "Insufficient balance");
 
         // Decrease the balance of the sender
-        balances[msg.sender] -= _amount;
+        balances[msg.sender] -= amount;
 
         // Transfer the amount to the sender
-        payable(msg.sender).transfer(_amount);
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
 
         // Emit a withdrawal event
-        emit Withdrawal(msg.sender, _amount);
+        emit Withdrawal(msg.sender, amount);
     }
 
     // Function to transfer Ether from one address to another
-    function transfer(address _recipient, uint256 _amount) public {
-        require(_recipient != address(0), "Cannot transfer to the zero address");
-        require(_amount > 0, "Transfer amount must be greater than zero");
-        require(balances[msg.sender] >= _amount, "Insufficient balance");
+    function transfer(address recipient, uint256 amount) external {
+        require(recipient != address(0), "Cannot transfer to the zero address");
+        require(amount > 0, "Transfer amount must be greater than zero");
+        require(balances[msg.sender] >= amount, "Insufficient balance");
 
         // Decrease the sender's balance
-        balances[msg.sender] -= _amount;
+        balances[msg.sender] -= amount;
 
         // Increase the recipient's balance
-        balances[_recipient] += _amount;
+        balances[recipient] += amount;
 
         // Emit a transfer event
-        emit Transfer(msg.sender, _recipient, _amount);
+        emit Transfer(msg.sender, recipient, amount);
     }
 
     // Function to get the balance of a specific address
-    function getBalance(address _account) public view returns (uint256) {
-        return balances[_account];
+    function getBalance(address account) external view returns (uint256) {
+        return balances[account];
     }
 }
